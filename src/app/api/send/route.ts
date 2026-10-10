@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       logger: true // Enable logging
     });
 
-    const { name, email: fromEmail, company, projectType, budget, timeline, message } = body;
+    const { name, email: fromEmail, company, projectType, budget, timeline, message, language } = body;
     
     // E-posta ayarları
     const mailOptions = {
@@ -53,6 +53,7 @@ export async function POST(request: Request) {
         <p><strong>Gönderen:</strong> ${name} (${fromEmail})</p>
         <p><strong>Şirket:</strong> ${company || 'Belirtilmemiş'}</p>
         <p><strong>Proje Türü:</strong> ${projectType || 'Belirtilmemiş'}</p>
+        <p><strong>Site dili:</strong> ${language || 'TR'}</p>
         <p><strong>Bütçe:</strong> ${budget || 'Belirtilmemiş'}</p>
         <p><strong>Zaman Çizelgesi:</strong> ${timeline || 'Belirtilmemiş'}</p>
         <p><strong>Mesaj:</strong></p>

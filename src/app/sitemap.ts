@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { site } from '@/lib/site'
+import { storeProducts } from '@/lib/apps'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date()
@@ -11,6 +12,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/contact', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/privacy-policy', priority: 0.2, changeFrequency: 'yearly' },
     { path: '/terms-of-use', priority: 0.2, changeFrequency: 'yearly' },
+    { path: '/apps/privacy', priority: 0.3, changeFrequency: 'yearly' },
+    ...storeProducts.map((product) => ({
+      path: `/apps/privacy/${product.slug}`,
+      priority: 0.2,
+      changeFrequency: 'yearly' as const,
+    })),
   ]
 
   return routes.map((r) => ({

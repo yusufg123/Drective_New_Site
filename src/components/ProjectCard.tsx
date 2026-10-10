@@ -3,6 +3,8 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { easeSmooth } from "@/lib/motion";
+import { useLocale } from "./LanguageProvider";
+import ProjectArtPlaceholder from "./ProjectArtPlaceholder";
 
 type Props = {
   title: string;
@@ -26,6 +28,7 @@ export default function ProjectCard({
   className = "",
 }: Props) {
   const [current, setCurrent] = React.useState(0);
+  const { locale } = useLocale();
   const hasImages = images && images.length > 0;
   const isTall = ["ferman", "crusader tycoon", "scanny"].includes(
     title.toLowerCase()
@@ -34,7 +37,7 @@ export default function ProjectCard({
   return (
     <motion.div
       whileHover={{ y: -4, transition: { duration: 0.35, ease: easeSmooth } }}
-      className={`flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface ${className}`}
+      className={`flex h-full flex-col overflow-hidden project-entry ${className}`}
     >
       {video ? (
         <div
@@ -57,9 +60,7 @@ export default function ProjectCard({
             src={images![current]}
             alt={title}
             fill
-            className={`transition duration-700 ease-out ${
-              title.toLowerCase() === "stufinance" ? "object-contain" : "object-cover"
-            }`}
+            className="object-cover transition duration-700 ease-out"
             sizes="(max-width: 768px) 100vw, 33vw"
           />
           {images!.length > 1 && (
@@ -69,7 +70,8 @@ export default function ProjectCard({
                   e.stopPropagation();
                   setCurrent((current - 1 + images!.length) % images!.length);
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white"
+                aria-label={locale === "tr" ? "Önceki görsel" : "Previous image"}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-black/70 text-white"
               >
                 ←
               </button>
@@ -78,7 +80,8 @@ export default function ProjectCard({
                   e.stopPropagation();
                   setCurrent((current + 1) % images!.length);
                 }}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white"
+                aria-label={locale === "tr" ? "Sonraki görsel" : "Next image"}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-black/70 text-white"
               >
                 →
               </button>
@@ -89,7 +92,11 @@ export default function ProjectCard({
         <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16/9" }}>
           <Image src={image} alt={title} fill className="object-cover object-top" />
         </div>
-      ) : null}
+      ) : (
+        <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16/9" }}>
+          <ProjectArtPlaceholder title={title} />
+        </div>
+      )}
 
       <div className="flex flex-grow flex-col p-5">
         <h3 className="m-0 font-heading text-xl font-semibold text-foreground">
@@ -101,7 +108,7 @@ export default function ProjectCard({
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-line px-3 py-1 text-[11px] text-brass"
+                className="border-l border-line px-3 py-1 text-[11px] text-brass"
               >
                 {tag}
               </span>

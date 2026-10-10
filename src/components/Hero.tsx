@@ -1,129 +1,213 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight } from 'lucide-react'
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from 'framer-motion'
+import { ArrowDown, ArrowUpRight } from 'lucide-react'
+import RevealText from './RevealText'
+import { mahalleninMakasi, upcomingApps, upcomingGames } from '@/lib/portfolio'
 import { easeSmooth } from '@/lib/motion'
-import { mahalleninMakasi } from '@/lib/portfolio'
+import type { Localized } from '@/lib/i18n'
+import { useLocale } from './LanguageProvider'
 
-function Phone({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
+const copy = {
+  tr: {
+    eyebrow: 'Drective / İstanbul',
+    title: ['Fikirleri gerçeğe,', 'hayalleri ekrana', 'taşıyoruz.'],
+    note: 'Bağımsız bir yaratıcı teknoloji stüdyosuyuz. Oyunlar geliştiriyor, dijital ürünler tasarlıyor ve fikirleri insanların severek kullandığı deneyimlere dönüştürüyoruz.',
+    work: 'İşlerimize göz at',
+    featuredEyebrow: 'Stüdyodan / Mobil oyun',
+    featuredText: 'App Store’da yayında · Ücretli oyunlarda Türkiye ilk 50',
+    featuredCta: 'Oyunu keşfet',
+    footnote: 'Oyunlar / Uygulamalar / Web',
+    more: 'Kaydır',
+  },
+  en: {
+    eyebrow: 'Drective / Istanbul',
+    title: ['Ideas made real,', 'dreams brought', 'to the screen.'],
+    note: 'We’re an independent creative technology studio. We develop games, design digital products and turn ideas into experiences people love to use.',
+    work: 'See our work',
+    featuredEyebrow: 'From the studio / Mobile game',
+    featuredText: 'Out now on the App Store · Top 50 paid games in Turkey',
+    featuredCta: 'Discover the game',
+    footnote: 'Games / Apps / Web',
+    more: 'Scroll',
+  },
+}
+
+const [cubelune, wizardus] = upcomingGames
+const [us, ralli] = upcomingApps
+
+type FloatingCard = {
+  src: string
+  alt: Localized
+  /** Horizontal centre of the card, as a percentage of the stage width. */
+  left: number
+  top: string
+  rotate: number
+  depth: number
+  className: string
+}
+
+const cards: FloatingCard[] = [
+  { src: us.screens[0].src, alt: us.screens[0].alt, left: 9, top: '24%', rotate: -9, depth: 0.5, className: 'hidden sm:block w-[15%] z-0' },
+  { src: cubelune.screens[0].src, alt: cubelune.screens[0].alt, left: 18, top: '12%', rotate: -6, depth: 0.9, className: 'w-[30%] sm:hidden z-10' },
+  { src: cubelune.screens[0].src, alt: cubelune.screens[0].alt, left: 28, top: '8%', rotate: -5, depth: 0.9, className: 'hidden sm:block w-[18%] z-10' },
+  { src: mahalleninMakasi.screens[0].src, alt: mahalleninMakasi.screens[0].alt, left: 50, top: '0%', rotate: 0, depth: 1.4, className: 'w-[38%] sm:w-[22%] z-20' },
+  { src: wizardus.screens[0].src, alt: wizardus.screens[0].alt, left: 72, top: '10%', rotate: 5, depth: 0.9, className: 'hidden sm:block w-[18%] z-10' },
+  { src: wizardus.screens[0].src, alt: wizardus.screens[0].alt, left: 82, top: '14%', rotate: 6, depth: 0.9, className: 'w-[30%] sm:hidden z-10' },
+  { src: ralli.screens[0].src, alt: ralli.screens[0].alt, left: 91, top: '26%', rotate: 9, depth: 0.5, className: 'hidden sm:block w-[15%] z-0' },
+]
+
+function Card({
+  card,
+  index,
+  pointerX,
+  pointerY,
+  scroll,
+  alt,
+}: {
+  card: FloatingCard
+  index: number
+  pointerX: MotionValue<number>
+  pointerY: MotionValue<number>
+  scroll: MotionValue<number>
+  alt: string
+}) {
+  const x = useTransform(pointerX, (v) => v * card.depth * 36)
+  const pointerShift = useTransform(pointerY, (v) => v * card.depth * 24)
+  const scrollShift = useTransform(scroll, [0, 1], [0, -card.depth * 140])
+  const y = useTransform([pointerShift, scrollShift], ([a, b]: number[]) => a + b)
+  const rotateY = useTransform(pointerX, (v) => v * 10)
+  const rotateX = useTransform(pointerY, (v) => v * -8)
+
   return (
-    <div
-      className={`relative aspect-[473/1024] overflow-hidden rounded-[2rem] border-[6px] border-[#1c1915] bg-[#1c1915] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)] ${className}`}
-    >
-      <Image src={src} alt={alt} fill className="object-cover" sizes="(max-width: 1024px) 40vw, 260px" priority />
+    <div className={`absolute -translate-x-1/2 ${card.className}`} style={{ left: `${card.left}%`, top: card.top }}>
+      <motion.div
+        initial={{ opacity: 0, y: 80, scale: 0.92 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 1.2, ease: easeSmooth, delay: 0.35 + Math.abs(card.left - 50) / 120 }}
+      >
+        <motion.div style={{ x, y, rotateX, rotateY, rotate: card.rotate, transformPerspective: 1200 }}>
+          <div className="hero-float" style={{ animationDelay: `${index * -1.3}s` }}>
+            <div className="relative aspect-[1/2.1] overflow-hidden rounded-[1.4rem] border border-white/10 bg-surface shadow-[0_40px_80px_-20px_#000000b3]">
+              <Image src={card.src} alt={alt} fill className="object-cover object-bottom" sizes="(max-width: 640px) 38vw, 22vw" priority={card.depth > 1} />
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }
 
 export default function Hero() {
-  const [menu, customer] = mahalleninMakasi.screens
+  const { locale, t } = useLocale()
+  const c = copy[locale]
+  const reduceMotion = useReducedMotion()
+  const stageRef = useRef<HTMLDivElement>(null)
+
+  const rawX = useMotionValue(0)
+  const rawY = useMotionValue(0)
+  const pointerX = useSpring(rawX, { stiffness: 60, damping: 18 })
+  const pointerY = useSpring(rawY, { stiffness: 60, damping: 18 })
+  const { scrollYProgress } = useScroll({ target: stageRef, offset: ['start end', 'end start'] })
+  const still = useMotionValue(0)
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (reduceMotion || event.pointerType !== 'mouse') return
+    const rect = event.currentTarget.getBoundingClientRect()
+    rawX.set((event.clientX - rect.left) / rect.width - 0.5)
+    rawY.set((event.clientY - rect.top) / rect.height - 0.5)
+  }
+
+  const resetPointer = () => {
+    rawX.set(0)
+    rawY.set(0)
+  }
 
   return (
-    <section className="relative overflow-hidden">
-      <div className="pointer-events-none absolute -right-40 top-10 h-[520px] w-[520px] rounded-full bg-brass/10 blur-3xl" />
-
-      <div className="container-custom section-padding relative grid min-h-[calc(100svh-5rem)] items-center gap-14 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
+    <section className="container-custom section-padding pt-10 sm:pt-14 lg:pt-14">
+      <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: easeSmooth }}
-            className="eyebrow mb-6"
-          >
-            İstanbul · Bağımsız stüdyo
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.08, ease: easeSmooth }}
-            className="font-heading text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl"
-          >
-            Oyun ve uygulama
-            <br />
-            <span className="text-brass">stüdyosu.</span>
-          </motion.h1>
-
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.18, ease: easeSmooth }}
-            className="mt-6 max-w-xl text-lg text-muted"
+            transition={{ duration: 0.8, ease: easeSmooth }}
+            className="eyebrow mb-5"
           >
-            İstanbul’dan oyunlar ve mobil uygulamalar üretiyoruz. Son oyunumuz{' '}
-            <span className="text-foreground">Mahallenin Makası</span>, Steam’de ise{' '}
-            <span className="text-foreground">Connections</span> yayında. Markalar için
-            web siteleri de yapıyoruz.
+            {c.eyebrow}
           </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.28, ease: easeSmooth }}
-            className="mt-9 flex flex-col gap-3 sm:flex-row"
-          >
-            <Link href="/#mahallenin-makasi" className="btn-primary">
-              Yeni oyunumuzu gör
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/contact#bizimle-calisin" className="btn-secondary">
-              Bizimle çalışın
-            </Link>
-          </motion.div>
-
-          <motion.dl
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.45 }}
-            className="mt-14 grid max-w-lg grid-cols-3 gap-6 border-t border-line pt-6"
-          >
-            {[
-              { k: '2', v: 'Yayındaki oyun' },
-              { k: '2', v: 'Mobil uygulama' },
-              { k: '5', v: 'Canlı web projesi' },
-            ].map((s) => (
-              <div key={s.v}>
-                <dt className="font-heading text-3xl font-bold text-foreground">{s.k}</dt>
-                <dd className="mt-1 text-sm text-muted">{s.v}</dd>
-              </div>
-            ))}
-          </motion.dl>
+          <RevealText
+            as="h1"
+            immediate
+            lines={c.title}
+            lineClassNames={['', 'italic text-muted', 'italic text-muted']}
+            className="hero-display"
+          />
         </div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: easeSmooth, delay: 0.5 }}
+          className="max-w-xs pb-3"
+        >
+          <p className="text-muted">{c.note}</p>
+          <Link href="/projects" className="text-link mt-6">
+            {c.work} <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
+          </Link>
+        </motion.div>
+      </div>
 
-        <div className="relative mx-auto h-[460px] w-full max-w-[460px] sm:h-[540px]">
-          <motion.div
-            initial={{ opacity: 0, y: 40, rotate: -4 }}
-            animate={{ opacity: 1, y: 0, rotate: -6 }}
-            transition={{ duration: 0.9, delay: 0.15, ease: easeSmooth }}
-            className="absolute left-[4%] top-[6%] w-[48%]"
-          >
-            <Phone src={customer.src} alt={customer.alt} />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 60, rotate: 2 }}
-            animate={{ opacity: 1, y: 0, rotate: 5 }}
-            transition={{ duration: 0.9, delay: 0.3, ease: easeSmooth }}
-            className="absolute right-[4%] top-0 w-[50%]"
-          >
-            <Phone src={menu.src} alt={menu.alt} />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.55, ease: easeSmooth }}
-            className="absolute bottom-[2%] left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-line bg-surface/95 p-2.5 pr-5 shadow-xl backdrop-blur"
-          >
-            <div className="relative h-14 w-14 overflow-hidden rounded-xl">
-              <Image src={mahalleninMakasi.icon} alt="Mahallenin Makası uygulama ikonu" fill className="object-cover" sizes="56px" />
-            </div>
-            <div>
-              <p className="m-0 text-xs text-muted">Yeni oyun</p>
-              <p className="m-0 font-heading text-base font-bold text-foreground">Mahallenin Makası</p>
-            </div>
-          </motion.div>
+      <div
+        ref={stageRef}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={resetPointer}
+        className="relative mt-10 aspect-square sm:aspect-[16/9] lg:mt-10 lg:aspect-[2/1]"
+      >
+        {cards.map((card, index) => (
+          <Card
+            key={`${card.src}-${index}`}
+            card={card}
+            index={index}
+            pointerX={pointerX}
+            pointerY={pointerY}
+            scroll={reduceMotion ? still : scrollYProgress}
+            alt={t(card.alt)}
+          />
+        ))}
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1, delay: 1.1 }}
+        className="relative z-30 mt-6 flex flex-col gap-4 border-t border-line pt-6 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div>
+          <p className="eyebrow m-0 !text-brass">{c.featuredEyebrow}</p>
+          <p className="m-0 mt-2 font-display text-3xl text-foreground sm:text-4xl">{mahalleninMakasi.title}</p>
+          <p className="m-0 mt-1 text-sm text-muted">{c.featuredText}</p>
         </div>
+        <Link href="/#mahallenin-makasi" className="text-link group self-start sm:self-auto">
+          {c.featuredCta}
+          <ArrowUpRight aria-hidden="true" className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+        </Link>
+      </motion.div>
+
+      <div className="hero-footnote">
+        <span>{c.footnote}</span>
+        <Link href="#manifesto" className="inline-flex items-center gap-2">
+          {c.more} <ArrowDown aria-hidden="true" className="h-3.5 w-3.5" />
+        </Link>
       </div>
     </section>
   )

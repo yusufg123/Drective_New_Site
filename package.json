@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit",
-    "postinstall": "next build"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "framer-motion": "^10.16.4",
